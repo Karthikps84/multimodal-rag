@@ -53,7 +53,14 @@ def stream_web_answer(engine: RAGEngine, question: str, history: list, results: 
 st.title("🔎 Multimodal RAG Assistant")
 st.caption("LangChain + LangGraph + NVIDIA NIM — supports LaTeX equations, tables, and cited sources")
 
-engine = get_engine()
+try:
+    engine = get_engine()
+except FileNotFoundError as e:
+    st.error(str(e))
+    st.info(
+        "Upload your documents into the data folder (supported: .pdf, .docx, .xlsx, .xls, .csv, .pptx, .txt, .md), then refresh."
+    )
+    st.stop()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []  # [{"role", "content", "sources"}]
