@@ -43,7 +43,14 @@ def main():
 
     except FileNotFoundError as e:
         logger.error(f"Data error: {e}")
-        logger.error("Make sure your data/ folder exists and contains documents.")
+        logger.error(
+            "Upload documents into data/ (supported: .pdf, .docx, .xlsx, .xls, .csv, .pptx, .txt, .md), then run again."
+        )
+        sys.exit(1)
+
+    except ValueError as e:
+        logger.error(f"Data validation error: {e}")
+        logger.error("Upload documents into data/ and re-run the app.")
         sys.exit(1)
 
     except KeyboardInterrupt:

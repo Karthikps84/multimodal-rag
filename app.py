@@ -11,6 +11,7 @@ Deploy free:   push to GitHub -> share.streamlit.io -> point
 """
 
 import time
+from pathlib import Path
 import streamlit as st
 
 from rag_engine import RAGEngine
@@ -18,6 +19,10 @@ from web_search import web_search, format_results_as_context
 import config
 
 st.set_page_config(page_title="RAG Assistant", page_icon="🔎", layout="wide")
+
+SUPPORTED_UPLOAD_EXTENSIONS = {
+    ".pdf", ".docx", ".xlsx", ".xls", ".csv", ".pptx", ".txt", ".md"
+}
 
 
 @st.cache_resource(show_spinner="Loading models and vector index...")
@@ -50,10 +55,72 @@ def stream_web_answer(engine: RAGEngine, question: str, history: list, results: 
         yield chunk
 
 
+def save_uploaded_files(uploaded_files: list, data_dir: Path) -> tuple[int, list[str]]:
+    """Persist uploaded files into data_dir and return save stats."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    saved_count = 0
+    skipped_files: list[str] = []
+
+    for file_obj in uploaded_files:
+        suffix = Path(file_obj.name).suffix.lower()
+        if suffix not in SUPPORTED_UPLOAD_EXTENSIONS:
+            skipped_files.append(file_obj.name)
+            continue
+
+        destination = data_dir / file_obj.name
+        destination.write_bytes(file_obj.getbuffer())
+        saved_count += 1
+
+    return saved_count, skipped_files
+
+
 st.title("🔎 Multimodal RAG Assistant")
 st.caption("LangChain + LangGraph + NVIDIA NIM — supports LaTeX equations, tables, and cited sources")
 
-engine = get_engine()
+if "upload_notice" in st.session_state:
+    st.success(st.session_state.pop("upload_notice"))
+
+with st.sidebar:
+    st.subheader("Upload Documents")
+    uploaded_files = st.file_uploader(
+        "Add files to the data folder",
+        type=[ext.lstrip(".") for ext in sorted(SUPPORTED_UPLOAD_EXTENSIONS)],
+        accept_multiple_files=True,
+    )
+
+    if st.button("Save And Process Uploaded Files", disabled=not uploaded_files):
+        saved_count, skipped_files = save_uploaded_files(uploaded_files, Path(config.DATA_DIR))
+
+        if skipped_files:
+            st.warning("Skipped unsupported files: " + ", ".join(skipped_files))
+
+        if saved_count > 0:
+            st.session_state["upload_notice"] = (
+                f"Saved {saved_count} file(s) to {config.DATA_DIR}. Rebuilding index."
+            )
+            st.cache_resource.clear()
+            st.rerun()
+        else:
+            st.info("No supported files were saved.")
+
+    st.subheader("Settings")
+    st.write(f"**LLM:** {config.LLM_MODEL}")
+    st.write(f"**Embeddings:** {config.EMBEDDING_MODEL}")
+    st.write(f"**Local score threshold:** {config.SIMILARITY_THRESHOLD}")
+    if st.button("Clear conversation"):
+        st.session_state.messages = []
+        st.session_state.history = []
+        st.rerun()
+
+try:
+    engine = get_engine()
+except FileNotFoundError as e:
+    st.error(str(e))
+    st.info(
+        "Upload your documents into the data folder (supported: .pdf, .docx, .xlsx, .xls, .csv, .pptx, .txt, .md), then refresh."
+    )
+    st.stop()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []  # [{"role", "content", "sources"}]
@@ -109,13 +176,3 @@ if question:
     st.session_state.messages.append({
         "role": "assistant", "content": full_answer, "sources": sources
     })
-
-with st.sidebar:
-    st.subheader("Settings")
-    st.write(f"**LLM:** {config.LLM_MODEL}")
-    st.write(f"**Embeddings:** {config.EMBEDDING_MODEL}")
-    st.write(f"**Local score threshold:** {config.SIMILARITY_THRESHOLD}")
-    if st.button("Clear conversation"):
-        st.session_state.messages = []
-        st.session_state.history = []
-        st.rerun()
