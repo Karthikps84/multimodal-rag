@@ -44,6 +44,10 @@ class GraphState(TypedDict):
 
 class RAGEngine:
 
+    SUPPORTED_EXTENSIONS = {
+        ".pdf", ".docx", ".xlsx", ".xls", ".csv", ".pptx", ".txt", ".md"
+    }
+
     ##############################################################
     # Constructor
     ##############################################################
@@ -271,6 +275,7 @@ class RAGEngine:
 
     def initialize(self):
         self.storage_dir.mkdir(exist_ok=True)
+        self._validate_data_folder()
         has_existing = self.storage_dir.exists() and any(self.storage_dir.iterdir())
 
         if has_existing and not self._dataset_changed():
@@ -279,6 +284,28 @@ class RAGEngine:
         else:
             logger.info("Dataset changed or no index found. Rebuilding.")
             self._build_vectorstore()
+
+    def _validate_data_folder(self):
+        if not self.data_dir.exists():
+            raise FileNotFoundError(
+                f"Data folder not found: {self.data_dir}. "
+                f"Create it and upload documents before running ingestion."
+            )
+
+        files = [p for p in self.data_dir.iterdir() if p.is_file()]
+        if not files:
+            raise FileNotFoundError(
+                f"No files found in {self.data_dir}. "
+                "Please upload documents to the data folder, then run again."
+            )
+
+        supported = [p for p in files if p.suffix.lower() in self.SUPPORTED_EXTENSIONS]
+        if not supported:
+            supported_list = ", ".join(sorted(self.SUPPORTED_EXTENSIONS))
+            raise FileNotFoundError(
+                f"No supported documents found in {self.data_dir}. "
+                f"Upload files with one of: {supported_list}."
+            )
 
     ##############################################################
     # Retrieval (MMR + rerank), using LangChain's built-in
