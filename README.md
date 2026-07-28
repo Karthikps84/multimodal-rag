@@ -1,6 +1,6 @@
 # Local Llama RAG
 
-Local document RAG assistant built around LangChain, Chroma, Streamlit, and NVIDIA-compatible model endpoints. The project loads documents from `local_lama_rag/data`, builds or reuses a persistent vector store in `local_lama_rag/storage`, and can fall back to web search when local context is not strong enough.
+Local document RAG assistant built around LangChain, Chroma, Streamlit, and NVIDIA-compatible model endpoints. The project loads documents from `multimodal-rag/data`, builds or reuses a persistent vector store in `multimodal-rag/storage`, and can fall back to web search when local context is not strong enough.
 
 ## What The Project Does
 
@@ -13,7 +13,7 @@ Local document RAG assistant built around LangChain, Chroma, Streamlit, and NVID
 ## Folder Guide
 
 ```text
-local_lama_rag/
+multimodal-rag/
 ├── app.py         # Streamlit UI
 ├── main.py        # CLI entrypoint
 ├── rag_engine.py  # Core retrieval / generation pipeline
@@ -59,31 +59,31 @@ local_lama_rag/
 2. Install dependencies:
 
 ```bash
-pip install -r local_lama_rag/requirements.txt
+pip install -r multimodal-rag/requirements.txt
 ```
 
-3. Create `local_lama_rag/.env` with the required keys:
+3. Create `multimodal-rag/.env` with the required keys:
 
 ```env
 NVIDIA_API_KEY=your_nvidia_key
 SERPER_API_KEY=your_serper_key
 ```
 
-4. Add or replace source documents in `local_lama_rag/data/`.
+4. Add or replace source documents in `multimodal-rag/data/`.
 
 ## Run
 
 From the repository root:
 
 ```bash
-cd local_lama_rag
+cd multimodal-rag
 python main.py
 ```
 
 For the Streamlit UI:
 
 ```bash
-cd local_lama_rag
+cd multimodal-rag
 streamlit run app.py
 ```
 
