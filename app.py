@@ -1,0 +1,121 @@
+"""
+==========================================================
+Streamlit UI for the Multimodal RAG Assistant
+==========================================================
+Run locally:   streamlit run app.py
+Deploy free:   push to GitHub -> share.streamlit.io -> point
+               at this file. Add NVIDIA_API_KEY and
+               SERPER_API_KEY as "Secrets" in the dashboard
+               (same syntax as .env, no need to commit .env).
+==========================================================
+"""
+
+import time
+import streamlit as st
+
+from rag_engine import RAGEngine
+from web_search import web_search, format_results_as_context
+import config
+
+st.set_page_config(page_title="RAG Assistant", page_icon="🔎", layout="wide")
+
+
+@st.cache_resource(show_spinner="Loading models and vector index...")
+def get_engine() -> RAGEngine:
+    rag = RAGEngine()
+    rag.initialize()
+    return rag
+
+
+def stream_local_answer(engine: RAGEngine, question: str, history: list, docs: list):
+    """Stream tokens from the local-generation chain so the UI fills in
+    progressively instead of blocking for the full response."""
+    context = "\n\n".join(
+        f"[{d.metadata.get('source_file')} p.{d.metadata.get('page', '-')}] {d.page_content}"
+        for d in docs
+    )
+    hist_str = engine._format_history(history)
+    for chunk in engine.local_chain.stream({
+        "context": context, "question": question, "history": hist_str
+    }):
+        yield chunk
+
+
+def stream_web_answer(engine: RAGEngine, question: str, history: list, results: list):
+    context = format_results_as_context(results)
+    hist_str = engine._format_history(history)
+    for chunk in engine.web_chain.stream({
+        "context": context, "question": question, "history": hist_str
+    }):
+        yield chunk
+
+
+st.title("🔎 Multimodal RAG Assistant")
+st.caption("LangChain + LangGraph + NVIDIA NIM — supports LaTeX equations, tables, and cited sources")
+
+engine = get_engine()
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []  # [{"role", "content", "sources"}]
+if "history" not in st.session_state:
+    st.session_state.history = []   # [(q, a)] fed into engine prompts
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+        if msg.get("sources"):
+            with st.expander("Sources"):
+                for s in msg["sources"]:
+                    st.markdown(f"- {s}")
+
+question = st.chat_input("Ask a question about your documents...")
+
+if question:
+    st.session_state.messages.append({"role": "user", "content": question})
+    with st.chat_message("user"):
+        st.markdown(question)
+
+    with st.chat_message("assistant"):
+        start = time.time()
+        docs, max_score = engine._retrieve(question)
+
+        placeholder = st.empty()
+        full_answer = ""
+
+        if max_score >= engine.similarity_threshold:
+            route_label = "📚 local knowledge base"
+            for chunk in stream_local_answer(engine, question, st.session_state.history, docs):
+                full_answer += chunk
+                placeholder.markdown(full_answer + " ▌")
+            sources = sorted({d.metadata.get("source_file", "unknown") for d in docs})
+        else:
+            route_label = "🌐 web search"
+            results = web_search(question, num_results=config.WEB_SEARCH_RESULTS)
+            for chunk in stream_web_answer(engine, question, st.session_state.history, results):
+                full_answer += chunk
+                placeholder.markdown(full_answer + " ▌")
+            sources = [f"{r['title']} ({r['link']})" for r in results]
+
+        placeholder.markdown(full_answer)
+        elapsed = time.time() - start
+
+        st.caption(f"Answered from {route_label} · score={max_score:.2f} · {elapsed:.1f}s")
+        with st.expander("Sources"):
+            for s in sources:
+                st.markdown(f"- {s}")
+
+    st.session_state.history.append((question, full_answer))
+    st.session_state.history = st.session_state.history[-config.MAX_HISTORY_TURNS:]
+    st.session_state.messages.append({
+        "role": "assistant", "content": full_answer, "sources": sources
+    })
+
+with st.sidebar:
+    st.subheader("Settings")
+    st.write(f"**LLM:** {config.LLM_MODEL}")
+    st.write(f"**Embeddings:** {config.EMBEDDING_MODEL}")
+    st.write(f"**Local score threshold:** {config.SIMILARITY_THRESHOLD}")
+    if st.button("Clear conversation"):
+        st.session_state.messages = []
+        st.session_state.history = []
+        st.rerun()

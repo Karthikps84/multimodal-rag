@@ -1,0 +1,30 @@
+langchain
+langchain-community
+langchain-core
+langchain-chroma
+langchain-nvidia-ai-endpoints
+langchain-text-splitters
+langgraph
+chromadb
+streamlit
+
+# Document loading
+pypdf
+pymupdf4llm
+pymupdf
+docx2txt
+unstructured
+openpyxl
+python-pptx
+pandas
+
+# Multimodal / OCR
+pillow
+pytesseract
+
+# Retrieval quality
+flashrank
+
+tiktoken
+python-dotenv
+requests
