@@ -179,7 +179,7 @@ app/
 
 ---
 
-# 📊 Resume Highlights
+# 📊 Project Highlights
 
 - Enterprise Multi-Agent AI Platform
 - LangGraph orchestration
@@ -189,9 +189,3 @@ app/
 - Parallel agent execution
 - Low-latency inference
 - Observability and evaluation
-
----
-
-# 📜 License
-
-MIT (recommended)
