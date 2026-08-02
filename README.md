@@ -1,95 +1,197 @@
-# Local Llama RAG
 
-Local document RAG assistant built around LangChain, Chroma, Streamlit, and NVIDIA-compatible model endpoints. The project loads documents from `multimodal-rag/data`, builds or reuses a persistent vector store in `multimodal-rag/storage`, and can fall back to web search when local context is not strong enough.
+# 🚀 Enterprise Multi-Agent Multimodal RAG Platform
 
-## What The Project Does
+> **Next-generation Agentic AI Workspace** for intelligent document understanding, multimodal retrieval, code generation, research assistance, and enterprise knowledge management.
 
-- Ingests local documents and chunks them for retrieval.
-- Stores embeddings and metadata in a persistent Chroma database.
-- Answers questions through a RAG pipeline with reranking and chat history handling.
-- Falls back to web search when the local corpus does not provide enough signal.
-- Exposes both a CLI chat loop and a Streamlit UI.
+> **Status:** Current repository provides a production-ready multimodal RAG foundation. The roadmap below evolves it into a LangGraph-powered multi-agent AI platform.
 
-## Folder Guide
+---
+
+## ✨ Overview
+
+This project started as a **Multimodal Retrieval-Augmented Generation (RAG)** application supporting:
+
+- 📄 Multi-document upload
+- 💬 Conversational QA
+- 📝 Document summarization
+- 📊 Table extraction
+- 🔍 Document comparison
+- 🌐 Optional web search
+- 🧠 Vector search with conversational memory
+
+The next evolution transforms it into an **Enterprise Multi-Agent AI Workspace** where specialized AI agents collaborate to solve complex user requests while optimizing **latency**, **memory usage**, and **token efficiency**.
+
+---
+
+# 🎯 Vision
+
+Instead of a single chatbot:
+
+User → Supervisor → Specialized Agents → Verified Response
+
+The system automatically routes requests to the minimum number of agents required.
+
+---
+
+# 🏗 Current Repository
+
+Detected top-level modules include:
 
 ```text
-multimodal-rag/
-├── app.py         # Streamlit UI
-├── main.py        # CLI entrypoint
-├── rag_engine.py  # Core retrieval / generation pipeline
-├── loaders.py     # Document loading and parsing helpers
-├── web_search.py  # Search fallback and result formatting
-├── config.py      # Paths, model settings, chunking, and thresholds
-├── utils.py       # Token, hashing, and history helpers
-├── logger.py      # Shared logging setup
-├── test_api.py    # Standalone API connectivity check
-├── requirements.txt
-├── data/          # Source documents to index
-├── storage/       # Persistent Chroma index and dataset metadata
-└── logs/          # Runtime logs
+app.py
+main.py
+rag_engine.py
+web_search.py
+analytics.py
+config.py
+logger.py
+requirements.txt
+README.md
 ```
 
-## Current Contents
+These form the foundation for the migration.
 
-- `data/` currently contains document sources that are already wired into the index.
-- `storage/` currently contains `chroma.sqlite3`, `dataset.json`, and the persisted Chroma collection directory.
-- `logs/` is available for runtime output and is currently empty.
+---
 
-## Key Files
+# 🧠 Target Multi-Agent Architecture
 
-- [app.py](app.py) is the Streamlit interface. It builds the chat UI, initializes the RAG engine, and renders answers with sources.
-- [main.py](main.py) is the CLI entrypoint. It starts the interactive terminal chat flow.
-- [rag_engine.py](rag_engine.py) contains the retrieval pipeline, persistence logic, reranking, and web-search fallback orchestration.
-- [loaders.py](loaders.py) handles supported document types such as PDF, DOCX, XLSX, CSV, PPTX, TXT, and MD.
-- [web_search.py](web_search.py) wraps the search fallback and result formatting.
-- [config.py](config.py) centralizes paths, model names, chunking settings, and retrieval thresholds.
-- [utils.py](utils.py) provides token counting, dataset hashing, and chat-history trimming.
-- [logger.py](logger.py) defines the shared logging format.
-- [test_api.py](test_api.py) is a small connectivity script for validating the external API setup.
-
-## Requirements
-
-- Python 3.12+
-- `NVIDIA_API_KEY`
-- `SERPER_API_KEY` for web search fallback
-
-## Setup
-
-1. Create and activate a virtual environment.
-2. Install dependencies:
-
-```bash
-pip install -r multimodal-rag/requirements.txt
+```text
+                        User
+                          │
+                          ▼
+                 Router / Supervisor
+                          │
+          ┌───────────────┼────────────────┐
+          ▼               ▼                ▼
+      Retrieval       Code Agent      Summary Agent
+          │               │                │
+          └───────────────┼────────────────┘
+                          ▼
+                 Verification Agent
+                          ▼
+                 Citation Generator
+                          ▼
+                     Final Answer
 ```
 
-3. Create `multimodal-rag/.env` with the required keys:
+## Recommended Agents
 
-```env
-NVIDIA_API_KEY=your_nvidia_key
-SERPER_API_KEY=your_serper_key
+| Agent | Responsibility |
+|-------|----------------|
+| Router | Intent detection and routing |
+| Planner | Task decomposition |
+| Retrieval | Hybrid retrieval (Dense + BM25) |
+| QA | Question answering |
+| Summary | Executive, detailed, bullet summaries |
+| Code | Generate, explain and debug code |
+| Table | Extract and analyse tables |
+| Vision | Images, charts and diagrams |
+| Comparison | Compare reports and documents |
+| Verification | Hallucination detection |
+| Citation | Source grounding |
+| Memory | Session and long-term memory |
+
+---
+
+# ⚡ Performance Optimizations
+
+- LangGraph supervisor architecture
+- Parallel agent execution
+- Async pipelines
+- Redis semantic cache
+- Embedding cache
+- Response cache
+- Parent-child chunking
+- Hybrid retrieval
+- Cross-encoder reranking
+- Context compression
+- Streaming responses
+- Incremental indexing
+- Token budgeting
+- Dynamic context windows
+
+---
+
+# 🛠 Recommended Tech Stack
+
+| Layer | Technology |
+|--------|------------|
+| Backend | FastAPI |
+| UI | Streamlit / React |
+| Orchestration | LangGraph |
+| Retrieval | Qdrant + BM25 |
+| Embeddings | BGE / OpenAI |
+| Reranker | BGE Reranker |
+| Cache | Redis |
+| Metadata | PostgreSQL |
+| Evaluation | RAGAS, DeepEval |
+| Observability | LangSmith |
+| Deployment | Docker + Kubernetes |
+
+---
+
+# 📁 Suggested Folder Structure
+
+```text
+app/
+ ├── agents/
+ ├── graph/
+ ├── retrieval/
+ ├── vectorstore/
+ ├── loaders/
+ ├── prompts/
+ ├── cache/
+ ├── evaluation/
+ ├── ui/
+ ├── api/
+ └── tests/
 ```
 
-4. Add or replace source documents in `multimodal-rag/data/`.
+---
 
-## Run
+# 🚀 Roadmap
 
-From the repository root:
+## Phase 1
+- Refactor existing RAG engine
+- Introduce LangGraph state
 
-```bash
-cd multimodal-rag
-python main.py
-```
+## Phase 2
+- Router agent
+- Retrieval agent
+- Summary agent
+- QA agent
 
-For the Streamlit UI:
+## Phase 3
+- Code agent
+- Vision agent
+- Comparison agent
 
-```bash
-cd multimodal-rag
-streamlit run app.py
-```
+## Phase 4
+- Verification
+- Citations
+- Semantic cache
+- Evaluation
 
-On the first run, the app loads documents, chunks them, and builds the Chroma store under `storage/`. Later runs reuse the existing index unless the contents of `data/` change.
+## Phase 5
+- Kubernetes deployment
+- Monitoring
+- CI/CD
 
-## Notes
+---
 
-- Unsupported file types in `data/` are skipped with a warning.
-- `test_api.py` can be used to confirm the external API configuration independently of the RAG app.
+# 📊 Resume Highlights
+
+- Enterprise Multi-Agent AI Platform
+- LangGraph orchestration
+- Hybrid multimodal retrieval
+- Vision-language understanding
+- Production-ready RAG
+- Parallel agent execution
+- Low-latency inference
+- Observability and evaluation
+
+---
+
+# 📜 License
+
+MIT (recommended)
