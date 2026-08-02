@@ -24,6 +24,12 @@ pytesseract
 
 # Retrieval quality
 flashrank
+rank-bm25
+cachetools
+
+# Best-in-class PDF OCR  (docling = IBM SOTA layout + neural OCR)
+# Falls back to pymupdf4llm -> PyPDFLoader when not installed.
+docling
 
 tiktoken
 python-dotenv
